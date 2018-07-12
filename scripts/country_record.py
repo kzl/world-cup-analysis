@@ -12,9 +12,9 @@ def get_queries(countries):
 	queries = []
 	for country in countries:
 		if country == 'Germany' or country == 'Germany FR':
-			queries.append((country, 'select ChampionshipYear as year, HomeTeam as home_team, AwayTeam as away_team, HomeTeamGoals as home_goals, AwayTeamGoals as away_goals from WorldCupMatches where HomeTeam = "Germany" or AwayTeam = "Germany" or HomeTeam = "Germany FR" or AwayTeam = "Germany FR";'))
+			queries.append((country, 'select ChampionshipYear as year, HomeTeam as home_team, AwayTeam as away_team, HomeTeamGoals as home_goals, AwayTeamGoals as away_goals, WinConditions as win_condition from WorldCupMatches where HomeTeam = "Germany" or AwayTeam = "Germany" or HomeTeam = "Germany FR" or AwayTeam = "Germany FR";'))
 		else:
-			queries.append((country, 'select ChampionshipYear as year, HomeTeam as home_team, AwayTeam as away_team, HomeTeamGoals as home_goals, AwayTeamGoals as away_goals from WorldCupMatches where HomeTeam = "' + country + '" or AwayTeam = "' + country + '";'))
+			queries.append((country, 'select ChampionshipYear as year, HomeTeam as home_team, AwayTeam as away_team, HomeTeamGoals as home_goals, AwayTeamGoals as away_goals, WinConditions as win_condition from WorldCupMatches where HomeTeam = "' + country + '" or AwayTeam = "' + country + '";'))
 	
 	return queries
 
@@ -23,17 +23,21 @@ def get_country_series(cursor, country, range_min, range_max):
 	for year in range(range_min, range_max+1):
 		yearly_records[year] = 0
 
-	for (year, home_team, away_team, home_goals, away_goals) in cursor:
-		if ((home_team == country and home_goals > away_goals) or (away_team == country and home_goals < away_goals)):
-			yearly_records[year] = yearly_records.get(year) + 1;
-		elif ((home_team == country and home_goals < away_goals) or (away_team == country and home_goals > away_goals)):
-			yearly_records[year] = yearly_records.get(year) - 1;
+	for (year, home_team, away_team, home_goals, away_goals, win_condition) in cursor:
+		winner = util.get_winner(home_goals, away_goals, win_condition)
+		if winner is None:
+			continue
+
+		if (winner == 'home' and home_team == country) or (winner == 'away' and away_team == country):
+			yearly_records[year] = yearly_records.get(year) + 1
+		elif (winner == 'home' and away_team == country) or (winner == 'away' and home_team == country):
+			yearly_records[year] = yearly_records.get(year) - 1
 
 		if country == 'Germany':
-			if ((home_team == 'Germany FR' and home_goals > away_goals) or (away_team == 'Germany FR' and home_goals < away_goals)):
-				yearly_records[year] = yearly_records.get(year) + 1;
-			elif ((home_team == 'Germany FR' and home_goals < away_goals) or (away_team == 'Germany FR' and home_goals > away_goals)):
-				yearly_records[year] = yearly_records.get(year) - 1;
+			if (winner == 'home' and home_team == 'Germany FR') or (winner == 'away' and away_team == 'Germany FR'):
+				yearly_records[year] = yearly_records.get(year) + 1
+			elif (winner == 'home' and away_team == 'Germany FR') or (winner == 'away' and home_team == 'Germany FR'):
+				yearly_records[year] = yearly_records.get(year) - 1
 
 	full_record = []
 	current_record = 0
