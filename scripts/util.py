@@ -38,3 +38,19 @@ def plot_time_series(series):
 		plt.show()
 	else:
 		print('No data found to plot.')
+
+def plot_histogram(series, alpha = 0.5):
+	if series.size > 0:
+		plt.figure()
+		series.plot.hist(alpha = alpha)
+		plt.show()
+	else:
+		print('No data found to plot.')
+
+def plot_bar_graph(series):
+	if series.size > 0:
+		plt.figure()
+		series.plot.bar()
+		plt.show()
+	else:
+		print('No data found to plot')
