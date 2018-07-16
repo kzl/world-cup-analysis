@@ -1,4 +1,5 @@
 from __future__ import print_function
+from enum import Enum
 
 import datetime
 import sys
@@ -7,6 +8,14 @@ import pandas as pd
 import mysql.connector
 import matplotlib.pyplot as plt
 import networkx as nx
+
+class Stage(Enum):
+	__order__ = 'GROUPS Ro16 QUARTERS SEMIS FINALS'
+	GROUPS = 1
+	Ro16 = 2
+	QUARTERS = 3
+	SEMIS = 4
+	FINALS = 5
 
 def get_countries(argv):
 	countries = []
@@ -51,6 +60,23 @@ def get_winner(home_goals, away_goals, win_condition):
 					break
 
 	return winner
+
+def get_stage(stage_name):
+	stage = None
+	stage_name = stage_name.lower()
+
+	if stage_name[0] == 'g':
+		stage = Stage.GROUPS
+	elif stage_name[0] == 'r':
+		stage = Stage.Ro16
+	elif stage_name[0] == 'q':
+		stage = Stage.QUARTERS
+	elif stage_name[0] == 's':
+		stage = Stage.SEMIS
+	elif stage_name == 'final':
+		stage = Stage.FINALS
+
+	return stage
 
 def plot_time_series(series):
 	if series.size > 0:
