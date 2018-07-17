@@ -27,6 +27,16 @@ def get_countries(argv):
 
 	return countries
 
+def clean_country_name(country_name):
+	country_name = country_name.encode('utf-8')
+
+	if len(country_name) >= 4 and country_name[0:4] == 'rn">':
+		country_name = country_name[4:]
+	if 'German' in country_name:
+		country_name = 'Germany'
+
+	return country_name
+
 def get_credentials():
 	file = open('../setup/credentials.txt', 'r')
 	username = file.readline()
