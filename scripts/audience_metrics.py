@@ -1,6 +1,9 @@
 from __future__ import print_function
+from sklearn import linear_model, metrics
 
 import datetime
+import math
+import random
 import sys
 import numpy as np
 import pandas as pd
@@ -68,8 +71,59 @@ def plot_stages_data(stages_data):
 
 	plt.show()
 
+def split_xy_data(data):
+	x = np.zeros((len(data), 1), dtype = np.float64)
+	y = np.zeros((len(data), 1), dtype = np.float64)
+
+	for i in range(len(data)):
+		x[i][0] = data[i][0]
+		y[i][0] = data[i][1]
+
+	return x, y
+
+def split_data(data, train_pct = 0.8):
+	num_training_examples = int(math.floor(train_pct * len(data)))
+
+	random.shuffle(data)
+
+	training_data = data[:num_training_examples]
+	test_data = data[num_training_examples:]
+
+	train_x, train_y = split_xy_data(training_data)
+	test_x, test_y = split_xy_data(test_data)
+
+	return train_x, train_y, test_x, test_y
+
+def print_model_results(regr, test_y, test_predictions):
+	print('Slope:\n', regr.coef_)
+	print('y-Intercept:\n', regr.intercept_)
+
+	print('Mean Squared Error: %.2f' % metrics.mean_squared_error(test_y, test_predictions))
+	print('Variance: %.2f' % metrics.r2_score(test_y, test_predictions))
+
+def graph_model_results(train_x, train_y, test_x, test_y, test_predictions, color = 'black'):
+	plt.scatter(train_x, train_y, color = color)
+	plt.scatter(test_x, test_y, color = color)
+	plt.plot(test_x, test_predictions, color = 'crimson')
+
+	plt.show()
+
+def generate_linear_model(data, show_results = True, color = 'black'):
+	train_x, train_y, test_x, test_y = split_data(data)
+
+	regr = linear_model.LinearRegression()
+	regr.fit(train_x, train_y)
+
+	test_predictions = regr.predict(test_x)
+
+	if show_results:
+		print_model_results(regr, test_y, test_predictions)
+		graph_model_results(train_x, train_y, test_x, test_y, test_predictions, color)
+
+	return regr
+
 def main(argv):
-	if len(argv) == 0 or not (str(argv[0]) == 'graph' or str(argv[1]) == 'build_model'):
+	if len(argv) == 0 or not (str(argv[0]) == 'graph' or str(argv[0]) == 'build_model'):
 		print('Must include parameter: either "graph" or "build_model"')
 		return
 
@@ -82,7 +136,12 @@ def main(argv):
 		plot_stages_data(stages_data)
 
 	else:
-		pass
+		attendance_table = get_attendance_table_from_query(db_connection, query)
+		stages_data = convert_table_to_series(attendance_table)
+
+		for stage in util.Stage:
+			print(stage)
+			generate_linear_model(stages_data[stage], show_results = True, color = get_stage_color(stage))
 
 	db_connection.close()
 

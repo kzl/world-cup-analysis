@@ -14,4 +14,4 @@ The data used for this analysis came from Andre Becklas on Kaggle: [link to data
 
 ### Tools Used
 
-Python 2, C++, and MySQL were used for this project.
+Python 2, C++, MySQL
