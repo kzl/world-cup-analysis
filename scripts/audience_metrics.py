@@ -1,5 +1,5 @@
 from __future__ import print_function
-from sklearn import linear_model, metrics
+from sklearn import linear_model, metrics, neighbors
 
 import datetime
 import math
@@ -71,6 +71,11 @@ def plot_stages_data(stages_data):
 
 	plt.show()
 
+def get_valid_models():
+	models_list = ['linear', 'knn']
+
+	return models_list
+
 def split_xy_data(data):
 	x = np.zeros((len(data), 1), dtype = np.float64)
 	y = np.zeros((len(data), 1), dtype = np.float64)
@@ -94,10 +99,11 @@ def split_data(data, train_pct = 0.8):
 
 	return train_x, train_y, test_x, test_y
 
-def print_model_results(regr, test_y, test_predictions):
+def print_model_variables(regr):
 	print('Slope:\n', regr.coef_)
 	print('y-Intercept:\n', regr.intercept_)
 
+def print_model_results(test_y, test_predictions):
 	print('Mean Squared Error: %.2f' % metrics.mean_squared_error(test_y, test_predictions))
 	print('Variance: %.2f' % metrics.r2_score(test_y, test_predictions))
 
@@ -108,16 +114,24 @@ def graph_model_results(train_x, train_y, test_x, test_y, test_predictions, colo
 
 	plt.show()
 
-def generate_linear_model(data, show_results = True, color = 'black'):
+def generate_model(data, model = 'linear', show_results = True, color = 'black'):
 	train_x, train_y, test_x, test_y = split_data(data)
 
-	regr = linear_model.LinearRegression()
+	regr = None
+	if model == 'linear':
+		regr = linear_model.LinearRegression()
+	elif model == 'knn':
+		regr = neighbors.KNeighborsRegressor(8)
+
 	regr.fit(train_x, train_y)
 
 	test_predictions = regr.predict(test_x)
 
 	if show_results:
-		print_model_results(regr, test_y, test_predictions)
+		if model == 'linear':
+			print_model_variables(regr)
+		
+		print_model_results(test_y, test_predictions)
 		graph_model_results(train_x, train_y, test_x, test_y, test_predictions, color)
 
 	return regr
@@ -135,13 +149,23 @@ def main(argv):
 		stages_data = convert_table_to_series(attendance_table)
 		plot_stages_data(stages_data)
 
-	else:
-		attendance_table = get_attendance_table_from_query(db_connection, query)
-		stages_data = convert_table_to_series(attendance_table)
+	elif argv[0] == 'build_model':
+		if len(argv) == 1:
+			print('Must include parameter for build_model')
+			return
 
-		for stage in util.Stage:
-			print(stage)
-			generate_linear_model(stages_data[stage], show_results = True, color = get_stage_color(stage))
+		models_list = get_valid_models()
+		model = argv[1]
+
+		if model in models_list:
+			attendance_table = get_attendance_table_from_query(db_connection, query)
+			stages_data = convert_table_to_series(attendance_table)
+
+			for stage in util.Stage:
+				print(stage)
+				generate_model(stages_data[stage], model = model, show_results = True, color = get_stage_color(stage))
+		else:
+			print('Invalid model name')
 
 	db_connection.close()
 
