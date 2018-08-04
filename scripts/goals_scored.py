@@ -27,17 +27,28 @@ def get_country_series(cursor, country, max_goals_range = 10):
 	for goals in range(max_goals_range+1):
 		num_goals[goals] = 0
 
+	total_goals = 0
+	num_games = 0
+
 	for (home_team, away_team, home_goals, away_goals) in cursor:
+		num_games += 1
+
 		if (home_team == country):
 			num_goals[home_goals] += 1
+			total_goals += home_goals
 		else:
 			num_goals[away_goals] += 1
+			total_goals += away_goals
 
 		if country == 'Germany':
 			if (home_team == 'Germany FR'):
 				num_goals[home_goals] += 1
+				total_goals += home_goals
 			else:
 				num_goals[away_goals] += 1
+				total_goals += away_goals
+
+	average_goals = float(total_goals) / float(num_games)
 
 	goals_freq = []
 	for goals in range(max_goals_range):
@@ -45,6 +56,8 @@ def get_country_series(cursor, country, max_goals_range = 10):
 
 	series = pd.Series(goals_freq)
 	series.name = country
+
+	print('%(country)s has scored %(total)d total goals and averages %(average).2f goals per match' % {'country': country, 'total': total_goals, 'average': average_goals})
 
 	return series
 

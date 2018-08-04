@@ -86,12 +86,15 @@ def get_elo_dict_from_query(db_connection, query, analyze = False):
 def print_elo_dict(elo_dict):
 	sorted_elo_dict = sorted(elo_dict.items(), key = lambda x: -x[1])
 
+	rank = 0
 	for pair in sorted_elo_dict:
-		print(pair[0] + ': %.2f' % pair[1])
+		rank += 1
+		print('#' + str(rank) + ': ' + pair[0] + ': %.2f' % pair[1])
 
 def main(argv):
 	if len(argv) == 0:
 		print('Must include paramater: either "print", "predict", or "analyze"')
+		return
 
 	db_connection = util.login()
 	query = get_query()
